@@ -1,0 +1,634 @@
+{
+  "name": "Intelligent Sales & Operations System",
+  "nodes": [
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "customerName",
+              "value": "={{ $json.Name.first }}{{ $json.Name.last }}"
+            },
+            {
+              "name": "customerEmail",
+              "value": "={{ $json.Email }}"
+            },
+            {
+              "name": "customerPhone",
+              "value": "={{$json[\"Phone Number\"].full.replace(/[^\\d]/g, '')}}"
+            },
+            {
+              "name": "shippingAddress",
+              "value": "={{ $json['Shipping Address'] }}"
+            },
+            {
+              "name": "itemsOrdered",
+              "value": "={{ $json.ItemsOrdered }}"
+            },
+            {
+              "name": "order date",
+              "value": "={{ $json[\"order date\"] }}"
+            },
+            {
+              "name": "Total",
+              "value": "={{ $json.Total }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "2. Standardize Incoming Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        64,
+        80
+      ],
+      "id": "72f0038a-2c10-4da0-8a63-bab84fb35c86"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "Your Order #{{$node[\"4. Create Order & Link Customer\"].json[\"id\"]}} Has Been Received!",
+        "includeHtml": true,
+        "htmlMessage": "=<h3>Hi {{$node[\"2. Standardize Incoming Data\"].json.customerName}},</h3> <p>Thank you for your order! We have successfully received it and will begin processing it shortly.</p> <p><b>Order Details:</b></p> <p><b>Order ID:</b> {{$node[\"Create order link\"].json.fields[\"Order ID\"]}}</p> <p><b>Items:</b> {{$node[\"Create order link\"].json.fields[\"Items Ordered\"]}}</p> <p><b>Total Amount:</b> ₱{{$node[\"Create order link\"].json.fields[\"Total Amount\"]}}</p> <p>We will notify you again once your order has been shipped to the following address: <br><i>{{$node[\"Create order link\"].json.fields[\"Shipping Address\"]}}</i></p> <br> <p>Thank you for your business!</p>",
+        "message": "thank youuu",
+        "toList": [
+          "leenatividad5@gmail.com"
+        ],
+        "additionalFields": {}
+      },
+      "name": "5a. Email Customer Confirmation",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -32
+      ],
+      "id": "96283f88-3f46-430d-b71e-6ac02ad8f063",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tmo5FmDOOWiuI971",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "New Order Received! (#{{$node[\"4. Create Order & Link Customer\"].json[\"id\"]}})",
+        "includeHtml": true,
+        "htmlMessage": "=<h3>New Order Alert!</h3> <p>A new order has been automatically processed and logged in Airtable.</p> <hr> <h4>Customer Details:</h4> <p><b>Name:</b> {{$node[\"2. Standardize Incoming Data\"].json.customerName}}</p> <p><b>Email:</b> {{$node[\"2. Standardize Incoming Data\"].json.customerEmail}}</p> <p><b>Phone:</b> {{$node[\"2. Standardize Incoming Data\"].json.customerPhone}}</p> <p><b>Shipping Address:</b> {{$node[\"Create order link\"].json.fields[\"Shipping Address\"]}}</p> <hr> <h4>Order Details:</h4> <p><b>Order ID:</b> {{$node[\"Create order link\"].json.fields[\"Order ID\"]}}</p> <p><b>Items:</b> {{$node[\"Create order link\"].json.fields[\"Items Ordered\"]}}</p> <p><b>Total Amount:</b> ₱{{$node[\"Create order link\"].json.fields[\"Total Amount\"]}}</p>",
+        "message": "thank youuuu",
+        "toList": [
+          "leenatividad5@gmail.com"
+        ],
+        "additionalFields": {}
+      },
+      "name": "5b. Email Internal Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        928,
+        208
+      ],
+      "id": "14f26bfe-fcbf-4d40-b75c-99318958a08d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tmo5FmDOOWiuI971",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appvh1W1Z3B7Ap95V",
+          "mode": "list",
+          "cachedResultName": "Business Operations HQ",
+          "cachedResultUrl": "https://airtable.com/appvh1W1Z3B7Ap95V"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblhi38flDYGyKhfT",
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://airtable.com/appvh1W1Z3B7Ap95V/tblhi38flDYGyKhfT"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order ID": "={{ $json.id }}",
+            "Items Ordered": "={{ $('2. Standardize Incoming Data').item.json.ItemsOrdered }}",
+            "Status": "Paid",
+            "Shipping Address": "={{ $('2. Standardize Incoming Data').item.json.shippingAddress.addr_line1 }}",
+            "Order Date": "={{$now}}",
+            "Total Amount": "={{parseFloat($node[\"2. Standardize Incoming Data\"].json.Total.replace('$', ''))}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "Order ID",
+              "displayName": "Order ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order Date",
+              "displayName": "Order Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer",
+              "displayName": "Customer",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Items Ordered",
+              "displayName": "Items Ordered",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Total Amount",
+              "displayName": "Total Amount",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                },
+                {
+                  "name": "Paid",
+                  "value": "Paid"
+                },
+                {
+                  "name": "Processing",
+                  "value": "Processing"
+                },
+                {
+                  "name": "Shipped",
+                  "value": "Shipped"
+                },
+                {
+                  "name": "Completed",
+                  "value": "Completed"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Shipping Address",
+              "displayName": "Shipping Address",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Days Since Order",
+              "displayName": "Days Since Order",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Customer Phone",
+              "displayName": "Customer Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Order Summary",
+              "displayName": "Order Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order Issue Detection",
+              "displayName": "Order Issue Detection",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Products",
+              "displayName": "Products",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        512,
+        -32
+      ],
+      "id": "0b4e7323-4d28-4468-9dfb-bcd35e6016d7",
+      "name": "Create order link",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "LHUlEo1eZftUd28Q",
+          "name": "Airtable Personal Access Token account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "form": "252232039014040"
+      },
+      "type": "n8n-nodes-base.jotFormTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        80
+      ],
+      "id": "bdb17713-bd6f-4209-a691-3a5d70334ffd",
+      "name": "JotForm Trigger",
+      "webhookId": "09ccd73e-af97-49b7-86f8-f2474e3bcd73",
+      "credentials": {
+        "jotFormApi": {
+          "id": "o4fW6JKbs4Rj1C9m",
+          "name": "JotForm account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appvh1W1Z3B7Ap95V",
+          "mode": "list",
+          "cachedResultName": "Business Operations HQ",
+          "cachedResultUrl": "https://airtable.com/appvh1W1Z3B7Ap95V"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblEYDfB0vPgpJnsT",
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "https://airtable.com/appvh1W1Z3B7Ap95V/tblEYDfB0vPgpJnsT"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email Address": "={{ $json.Email }}",
+            "Full Name": "={{ $json['Phone Number'].full }}",
+            "Phone Number": "={{ $json.customerPhone }}"
+          },
+          "matchingColumns": [
+            "Email Address"
+          ],
+          "schema": [
+            {
+              "id": "Customer ID",
+              "displayName": "Customer ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order History",
+              "displayName": "Order History",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Profile Photo",
+              "displayName": "Profile Photo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer ID (Formula)",
+              "displayName": "Customer ID (Formula)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Total Orders",
+              "displayName": "Total Orders",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Total Amount Spent",
+              "displayName": "Total Amount Spent",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Order Date",
+              "displayName": "Last Order Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Average Order Value",
+              "displayName": "Average Order Value",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Customer Status",
+              "displayName": "Customer Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Active",
+                  "value": "Active"
+                },
+                {
+                  "name": "Returning",
+                  "value": "Returning"
+                },
+                {
+                  "name": "At Risk",
+                  "value": "At Risk"
+                },
+                {
+                  "name": "VIP",
+                  "value": "VIP"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order Status Summary (AI)",
+              "displayName": "Order Status Summary (AI)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer Insights (AI)",
+              "displayName": "Customer Insights (AI)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        -32
+      ],
+      "id": "df9960ca-f330-46aa-931e-de3b1be57a3a",
+      "name": "Upsert Customer",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "LHUlEo1eZftUd28Q",
+          "name": "Airtable Personal Access Token account 6"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "2. Standardize Incoming Data": {
+      "main": [
+        [
+          {
+            "node": "Upsert Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5a. Email Customer Confirmation": {
+      "main": [
+        []
+      ]
+    },
+    "Create order link": {
+      "main": [
+        [
+          {
+            "node": "5a. Email Customer Confirmation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "5b. Email Internal Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JotForm Trigger": {
+      "main": [
+        [
+          {
+            "node": "2. Standardize Incoming Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Customer": {
+      "main": [
+        [
+          {
+            "node": "Create order link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ccbcc4d5-619d-4c68-b6cc-d9b919cb392d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6b9a5f7bca86af52d9974aedbf9bc193b92fd3d7a35e65f44f5e7e7b739843ed"
+  },
+  "id": "Zbco0uFCp9WeGLdZ",
+  "tags": []
+}
